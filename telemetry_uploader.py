@@ -9,6 +9,10 @@ bucket = "telemetry-ingestion-jb"
 raw_prefix = "raw/"
 decoded_prefix = "decoded/"
 
+cloudwatch = boto3.client('cloudwatch')
+namespace = "Telemetry"
+metric_name = "PacketsPerMinute"
+
 
 def generate_packet():
     return {
@@ -34,9 +38,28 @@ def upload_decoded(packet):
     print(f"Uploaded decoded {filename}")
 
 
+def send_metric(count=1):
+    """
+    Senda a metric to CloudWatch.
+    count: number of packets uploaded in this iteration
+    """
+    cloudwatch.put_metric_data(
+        Namespace=namespace,
+        MetricData=[
+            {
+                'MetricName': metric_name,
+                'Unit': 'Count',
+                'Value': count
+            }
+        ]
+    )
+    print(f"Sent CloudWatch metric: {count} packet(s)")
+
+
 if __name__ == "__main__":
     for _ in range(20):
         packet = generate_packet()
         upload_to_s3(packet)
         upload_decoded(packet)
+        send_metric()
         time.sleep(5)  # simulate 5-second heartbeat
