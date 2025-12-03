@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telemetry-app
+  labels:
+    app: telemetry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telemetry
+  template:
+    metadata:
+      labels:
+        app: telemetry
+    spec:
+      containers:
+        - name: telemetry-container
+          image: telemetry-app:latest   # <-- your Docker image tag
+          imagePullPolicy: Never
+          envFrom:
+            - secretRef:
+                name: aws-creds     # injects AWS credentials
+          env:
+            - name: AWS_REGION
+              value: "eu-west-1"    # optional but recommended
+          ports:
+            - containerPort: 8080    # change if your app listens elsewhere
